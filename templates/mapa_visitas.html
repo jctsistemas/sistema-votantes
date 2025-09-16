@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mapa de Visitas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Leaflet core -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Leaflet Heatmap -->
+  <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
+
+  <!-- Leaflet MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f2f2f7;
+    }
+    h2 {
+      text-align: center;
+      padding: 20px;
+      margin: 0;
+      background-color: #fff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    #map {
+      height: 90vh;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h2>🗺️ Mapa de Visitas Registradas</h2>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map').setView([-31.4167, -64.1833], 12); // Córdoba
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 📍 Datos dinámicos desde Flask
+    const puntos = {{ puntos|tojson }};
+
+    // 🔥 Heatmap
+    const heatData = puntos
+      .filter(p => p.latitud && p.longitud)
+      .map(p => [p.latitud, p.longitud]);
+    L.heatLayer(heatData, {
+      radius: 25,
+      blur: 15,
+      maxZoom: 17
+    }).addTo(map);
+
+    // 🏘️ Clustering
+    const clusterGroup = L.markerClusterGroup();
+
+    puntos.forEach(p => {
+      if (p.latitud && p.longitud) {
+        const popup = `
+          <strong>Índice:</strong> ${p.indice}<br>
+          <strong>Nombre:</strong> ${p.nombre} ${p.apellido}<br>
+          <strong>Observación:</strong> ${p.observacion || '—'}<br>
+          <strong>Nivel:</strong> ${p.nivel || '—'}
+        `;
+        const marker = L.marker([p.latitud, p.longitud]).bindPopup(popup);
+        clusterGroup.addLayer(marker);
+      }
+    });
+
+    map.addLayer(clusterGroup);
+  </script>
+</body>
+</html>

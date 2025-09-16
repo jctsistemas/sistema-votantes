@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial de Visita - Índice {{ indice }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, sans-serif;
+      background-color: #f2f2f7;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      padding: 25px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    h2, h3 {
+      text-align: center;
+    }
+    .info p {
+      margin: 6px 0;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .foto {
+      text-align: center;
+    }
+    .foto img {
+      width: 100%;
+      height: 150px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .foto img:hover {
+      transform: scale(1.03);
+    }
+    .foto form {
+      margin-top: 8px;
+    }
+    .btn-eliminar {
+      background-color: #ff3b30;
+      color: white;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-volver {
+      display: block;
+      width: 100%;
+      max-width: 300px;
+      margin: 30px auto 0;
+      background-color: #007aff;
+      color: white;
+      padding: 14px;
+      border-radius: 12px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .agregar-fotos {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .agregar-fotos input[type="file"] {
+      margin-bottom: 10px;
+    }
+    .agregar-fotos button {
+      background-color: #34c759;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      text-align: center;
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80%;
+      margin-top: 5%;
+    }
+    .lightbox .cerrar {
+      position: absolute;
+      top: 20px; right: 40px;
+      color: #fff;
+      font-size: 40px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>📍 Historial de Visita - Índice {{ indice }}</h2>
+
+    {% if visita %}
+      <div class="info">
+        <p><strong>Nombre:</strong> {{ visita.nombre }} {{ visita.apellido }}</p>
+        <p><strong>Observación:</strong> {{ visita.observacion or '—' }}</p>
+        <p><strong>Nivel:</strong> {{ visita.nivel or '—' }}</p>
+        <p><strong>Fecha:</strong> {{ visita.fecha_visita or '—' }}</p>
+      </div>
+    {% else %}
+      <p>No se encontró información de visita para este índice.</p>
+    {% endif %}
+
+    <h3>📷 Fotos</h3>
+    {% if fotos %}
+      <div class="grid">
+        {% for foto in fotos %}
+          <div class="foto">
+            <img src="/{{ foto.archivo }}" alt="Foto" onclick="abrirLightbox('{{ foto.archivo }}')">
+            <form method="POST" action="{{ url_for('eliminar_foto', foto_id=foto.id) }}">
+              <button type="submit" class="btn-eliminar" onclick="return confirm('¿Eliminar esta foto?')">❌ Eliminar</button>
+            </form>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p>No hay fotos para esta visita.</p>
+    {% endif %}
+
+    <div class="agregar-fotos">
+      <h3>➕ Agregar más fotos</h3>
+      <form method="POST" action="{{ url_for('agregar_fotos', indice=indice) }}" enctype="multipart/form-data">
+        <input type="file" name="fotos_nuevas" multiple accept="image/*" required>
+        <button type="submit">📤 Subir fotos</button>
+      </form>
+    </div>
+
+    <a class="btn-volver" href="{{ url_for('registro_visita') }}">⬅️ Volver al registro</a>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" onclick="cerrarLightbox()">
+    <span class="cerrar">&times;</span>
+    <img id="img-lightbox">
+  </div>
+
+  <script>
+    function abrirLightbox(src) {
+      document.getElementById('img-lightbox').src = '/' + src;
+      document.getElementById('lightbox').style.display = 'block';
+    }
+    function cerrarLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

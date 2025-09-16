@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Historial de Visitas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, sans-serif;
+      background-color: #f2f2f7;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .tarjeta {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .tarjeta h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .tarjeta p {
+      margin: 4px 0;
+      color: #333;
+    }
+    .fotos {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      overflow-x: auto;
+    }
+    .fotos img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .fotos img:hover {
+      transform: scale(1.05);
+    }
+    .btn-ver {
+      display: inline-block;
+      margin-top: 10px;
+      background-color: #007aff;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .volver {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .volver a {
+      background-color: #ccc;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      text-align: center;
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80%;
+      margin-top: 5%;
+    }
+    .lightbox .cerrar {
+      position: absolute;
+      top: 20px; right: 40px;
+      color: #fff;
+      font-size: 40px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 Historial de visitas de {{ usuario.nombre_completo }}</h2>
+
+  {% if visitas %}
+    {% for v in visitas %}
+      <div class="tarjeta">
+        <h3>Índice: {{ v.indice }}</h3>
+        <p><strong>Nombre:</strong> {{ v.nombre }} {{ v.apellido }}</p>
+        <p><strong>Observación:</strong> {{ v.observacion or '—' }}</p>
+        <p><strong>Nivel:</strong> {{ v.nivel or '—' }}</p>
+        <p><strong>Fecha:</strong> {{ v.fecha_visita or '—' }}</p>
+
+        {% set fotos = fotos_por_visita.get(v.indice, []) %}
+        {% if fotos %}
+          <div class="fotos">
+            {% for foto in fotos %}
+              <img src="/{{ foto.archivo }}" alt="Foto" onclick="abrirLightbox('{{ foto.archivo }}')">
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <a class="btn-ver" href="{{ url_for('historial', indice=v.indice) }}">Ver detalle completo</a>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No has registrado visitas aún.</p>
+  {% endif %}
+
+  <div class="volver">
+    <a href="{{ url_for('panel') }}">← Volver al panel</a>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" onclick="cerrarLightbox()">
+    <span class="cerrar">&times;</span>
+    <img id="img-lightbox">
+  </div>
+
+  <script>
+    function abrirLightbox(src) {
+      document.getElementById('img-lightbox').src = '/' + src;
+      document.getElementById('lightbox').style.display = 'block';
+    }
+    function cerrarLightbox() {
+      document.getElementById('lightbox').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

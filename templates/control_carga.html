@@ -1,0 +1,17 @@
+<h2>📊 Control de Carga Diario</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Usuario</th>
+      <th>Visitas registradas hoy</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in resumen %}
+      <tr>
+        <td>{{ r.nombre_usuario }}</td>
+        <td>{{ r.total }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

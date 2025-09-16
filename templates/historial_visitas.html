@@ -1,0 +1,30 @@
+<h2>📅 Historial de Visitas</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Fecha</th>
+      <th>Índice</th>
+      <th>Nombre</th>
+      <th>Apellido</th>
+      <th>Observación</th>
+      <th>Nivel</th>
+      <th>Usuario</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for v in visitas %}
+      <tr>
+        <td>{{ v.fecha_visita }}</td>
+        <td>{{ v.indice }}</td>
+        <td>{{ v.nombre }}</td>
+        <td>{{ v.apellido }}</td>
+        <td>{{ v.observacion }}</td>
+        <td>
+          {% if v.nivel == 1 %}😡{% elif v.nivel == 2 %}😕{% elif v.nivel == 3 %}😐
+          {% elif v.nivel == 4 %}🙂{% elif v.nivel == 5 %}😄{% endif %}
+        </td>
+        <td>{{ v.nombre_usuario }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>

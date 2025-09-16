@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Navegación</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f7;
+      padding: 40px;
+      text-align: center;
+    }
+    h2 {
+      margin-bottom: 30px;
+    }
+    .boton {
+      display: block;
+      width: 80%;
+      max-width: 300px;
+      margin: 15px auto;
+      padding: 15px;
+      font-size: 18px;
+      background-color: #007aff;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .boton.logout {
+      background-color: #ccc;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <h2>👋 Bienvenido, {{ usuario.nombre_completo }}</h2>
+
+  <a href="/registro_visita" class="boton">📋 Registro de Visitas</a>
+  <a href="/mapa_visitas" class="boton">🗺️ Mapa de Visitas</a>
+  <a href="/mi_historial" class="boton">📖 Mi Historial de Visitas</a>
+  <a href="/logout" class="boton logout">🔒 Cerrar Sesión</a>
+</body>
+</html>

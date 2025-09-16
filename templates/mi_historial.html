@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Historial de Visitas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Roboto, sans-serif;
+      background-color: #f2f2f7;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .tarjeta {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .tarjeta h3 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+    .tarjeta p {
+      margin: 4px 0;
+      color: #333;
+    }
+    .fotos {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      overflow-x: auto;
+    }
+    .fotos img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .fotos img:hover {
+      transform: scale(1.05);
+    }
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .btn-ver {
+      background-color: #007aff;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .btn-zip {
+      background-color: #34c759;
+      color: white;
+      padding: 8px 14px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .btn-share {
+      background-color: #25d366;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 10px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .volver {
+      text-align: center;
+      margin-top: 30px;
+    }
+    .volver a {
+      background-color: #ccc;
+      color: black;
+      padding: 12px 20px;
+      border-radius: 12px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .lightbox {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0,0,0,0.95);
+      color: white;
+      text-align: center;
+    }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 80%;
+      margin-top: 5%;
+    }
+    .lightbox .cerrar {
+      position: absolute;
+      top: 20px; right: 40px;
+      font-size: 40px;
+      cursor: pointer;
+    }
+    .lightbox .nav {
+      position: absolute;
+      top: 50%;
+      font-size: 40px;
+      cursor: pointer;
+      user-select: none;
+      padding: 10px;
+      background-color: rgba(255,255,255,0.3);
+      border-radius: 50%;
+    }
+    .lightbox .nav.prev { left: 20px; }
+    .lightbox .nav.next { right: 20px; }
+    .lightbox .titulo {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 Historial de visitas de {{ usuario.nombre_completo }}</h2>
+
+  {% if visitas %}
+    {% for v in visitas %}
+      <div class="tarjeta">
+        <h3>Índice: {{ v.indice }}</h3>
+        <p><strong>Nombre:</strong> {{ v.nombre }} {{ v.apellido }}</p>
+        <p><strong>Observación:</strong> {{ v.observacion or '—' }}</p>
+        <p><strong>Nivel:</strong> {{ v.nivel or '—' }}</p>
+        <p><strong>Fecha:</strong> {{ v.fecha_visita or '—' }}</p>
+
+        {% set fotos = fotos_por_visita.get(v.indice, []) %}
+        {% if fotos %}
+          <div class="fotos">
+            {% for foto in fotos %}
+              <img src="/{{ foto.archivo }}" alt="Foto" onclick="abrirLightbox({{ v.indice }}, {{ loop.index0 }})">
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="botones">
+          <a class="btn-ver" href="{{ url_for('historial', indice=v.indice) }}">Ver detalle completo</a>
+          <a class="btn-zip" href="{{ url_for('descargar_fotos', indice=v.indice) }}">📦 Descargar fotos</a>
+          <button class="btn-share" onclick="compartirWhatsApp({{ v.indice }})">📤 Compartir</button>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No has registrado visitas aún.</p>
+  {% endif %}
+
+  <div class="volver">
+    <a href="{{ url_for('panel') }}">← Volver al panel</a>
+  </div>
+
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox" onclick="cerrarLightbox()">
+    <span class="cerrar">&times;</span>
+    <div class="nav prev" onclick="event.stopPropagation(); cambiarImagen(-1)">&#10094;</div>
+    <img id="img-lightbox">
+    <div class="nav next" onclick="event.stopPropagation(); cambiarImagen(1)">&#10095;</div>
+    <div id="titulo-lightbox" class="titulo"></div>
+  </div>
+
+  <script>
+    let fotosVisita = {{ fotos_por_visita | tojson }};
+
+    function abrirLightbox(indice, index) {
+        const fotos = fotosVisita[indice] || [];
+        if (!fotos.length) return;
+
+        let html = `
+            <div class="lightbox" onclick="cerrarLightbox()">
+                <span class="cerrar">&times;</span>
+                <div class="nav prev" onclick="event.stopPropagation(); cambiarImagen(-1)">&#10094;</div>
+                <img id="img-lightbox" src="/${fotos[index].archivo}">
+                <div class="nav next" onclick="event.stopPropagation(); cambiarImagen(1)">&#10095;</div>
+                <div id="titulo-lightbox" class="titulo">Foto ${index + 1} de ${fotos.length}</div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', html);
+        window.fotosActuales = fotos;
+        window.fotoActual = index;
+    }
+
+    function cambiarImagen(direccion) {
+        window.fotoActual += direccion;
+        if (window.fotoActual < 0) window.fotoActual = window.fotosActuales.length - 1;
+        if (window.fotoActual >= window.fotosActuales.length) window.fotoActual = 0;
+        document.getElementById('img-lightbox').src = '/' + window.fotosActuales[window.fotoActual].archivo;
+        document.getElementById('titulo-lightbox').textContent = `Foto ${window.fotoActual + 1} de ${window.fotosActuales.length}`;
+    }
+
+    function cerrarLightbox() {
+        const lb = document.querySelector('.lightbox');
+        if (lb) lb.remove();
+    }
+
+    function compartirWhatsApp(indice) {
+        const url = `${window.location.origin}/historial/${indice}`;
+        const texto = `¡Mirá las fotos de la visita al índice ${indice}! 📸`;
+        const compartir = `https://wa.me/?text=${encodeURIComponent(texto + ' ' + url)}`;
+        window.open(compartir, '_blank');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        const lb = document.querySelector('.lightbox');
+        if (!lb) return;
+        if (e.key === 'Escape') cerrarLightbox();
+        if (e.key === 'ArrowLeft') cambiarImagen(-1);
+        if (e.key === 'ArrowRight') cambiarImagen(1);
+    });
+  </script>
+</body>
+</html>

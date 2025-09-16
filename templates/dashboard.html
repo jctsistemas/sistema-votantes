@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<style>
+  .fade-in {
+    animation: fadeIn 0.6s ease-in-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+  <meta charset="UTF-8">
+  <title>Panel de Control</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='estilos.css') }}">
+</head>
+<body>
+  <header>
+    <h1>Bienvenido, {{ usuario.nombre_completo }}</h1>
+    <p>Roles activos: {{ usuario.roles | join(', ') }}</p>
+    <a href="{{ url_for('logout') }}">Cerrar sesión</a>
+  </header>
+
+  <section>
+    <h2>📊 Panel de métricas</h2>
+    <div class="metricas">
+      <div class="card">Usuarios activos: {{ metricas.usuarios_activos }}</div>
+      <div class="card">Roles definidos: {{ metricas.total_roles }}</div>
+      <div class="card">Asignaciones totales: {{ metricas.total_asignaciones }}</div>
+    </div>
+  </section>
+
+  {% if 'administrador' in usuario.roles %}
+  <section>
+    <h2>🧾 Trazabilidad de acciones</h2>
+    <form method="GET" action="{{ url_for('dashboard') }}">
+      <label for="filtro_usuario">Filtrar por usuario:</label>
+      <select name="filtro_usuario" id="filtro_usuario">
+        <option value="">-- Todos --</option>
+        {% for u in usuarios_disponibles %}
+          <option value="{{ u.id }}" {% if filtro_usuario == u.id %}selected{% endif %}>{{ u.nombre_usuario }}</option>
+        {% endfor %}
+      </select>
+      <button type="submit">Filtrar</button>
+    </form>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Acción</th>
+          <th>Fecha</th>
+          <th>IP</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for log in trazabilidad %}
+        <tr>
+          <td>{{ log.usuario }}</td>
+          <td>{{ log.accion }}</td>
+          <td>{{ log.fecha }}</td>
+          <td>{{ log.ip }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+</body>
+</html>

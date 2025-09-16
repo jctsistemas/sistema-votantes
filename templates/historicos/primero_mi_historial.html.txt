@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Mi Historial de Visitas</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f2f2f7;
+      padding: 20px;
+    }
+    h2 {
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      text-align: left;
+    }
+    th {
+      background-color: #007aff;
+      color: white;
+    }
+    .volver {
+      display: block;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .volver a {
+      background-color: #ccc;
+      padding: 10px 20px;
+      border-radius: 10px;
+      text-decoration: none;
+      color: black;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>📋 Historial de visitas de {{ usuario.nombre_completo }}</h2>
+
+  {% if visitas %}
+    <table>
+      <tr>
+        <th>Índice</th>
+        <th>Nombre</th>
+        <th>Apellido</th>
+        <th>Observación</th>
+        <th>Nivel</th>
+        <th>Fecha</th>
+        <th>Latitud</th>
+        <th>Longitud</th>
+      </tr>
+      {% for v in visitas %}
+      <tr>
+        <td>{{ v.indice }}</td>
+        <td>{{ v.nombre }}</td>
+        <td>{{ v.apellido }}</td>
+        <td>{{ v.observacion or '—' }}</td>
+        <td>{{ v.nivel or '—' }}</td>
+        <td>{{ v.fecha_visita or '—' }}</td>
+        <td>{{ v.latitud or '—' }}</td>
+        <td>{{ v.longitud or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  {% else %}
+    <p>No has registrado visitas aún.</p>
+  {% endif %}
+
+  <div class="volver">
+    <a href="/panel">← Volver al panel</a>
+  </div>
+</body>
+</html>

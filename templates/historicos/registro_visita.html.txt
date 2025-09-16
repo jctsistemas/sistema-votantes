@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Visita</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+      background-color: #f2f2f7;
+      padding: 20px;
+    }
+    .form-ios {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      max-width: 500px;
+      margin: auto;
+    }
+    input, select, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 14px;
+      border-radius: 12px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    input.readonly {
+      background-color: #eee;
+      color: #555;
+    }
+    button {
+      background-color: #007aff;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button.cancelar {
+      background-color: #ccc;
+      color: black;
+    }
+    .mensaje-error {
+      background-color: #ffecec;
+      color: #d8000c;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .mensaje-exito {
+      background-color: #e6ffed;
+      color: #007a3d;
+      padding: 12px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      text-align: center;
+      font-weight: bold;
+    }
+    .contador {
+      text-align: center;
+      margin-bottom: 20px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-ios">
+    <h2>📍 Registro de Visita</h2>
+
+    <div class="contador">
+      🗓️ Visitas hoy: {{ contador_hoy }}<br>
+      📊 Total histórico: {{ contador_total }}
+    </div>
+
+    {% if mensaje_estado %}
+      <div class="mensaje-exito">{{ mensaje_estado }}</div>
+    {% endif %}
+
+    {% with mensajes = get_flashed_messages() %}
+      {% if mensajes %}
+        {% for msg in mensajes %}
+          {% if "✅" in msg %}
+            <div class="mensaje-exito">{{ msg }}</div>
+            <script>
+              setTimeout(() => {
+                window.location.href = "/registro_visita";
+              }, 2000);
+            </script>
+          {% else %}
+            <div class="mensaje-error">{{ msg }}</div>
+          {% endif %}
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST" enctype="multipart/form-data" onsubmit="adjuntarUbicacion(event)">
+      <input type="number" name="indice" min="1" step="1"
+             value="{{ persona.indice if persona else request.form.indice or '' }}"
+             placeholder="Número de índice" required autofocus>
+
+      {% if modo == "editar" and persona %}
+        <input type="text" value="{{ persona.nombre }}" class="readonly" readonly>
+        <input type="text" value="{{ persona.apellido }}" class="readonly" readonly>
+
+        <input type="text" name="observacion" id="observacion"
+               value="{{ persona.observacion or '' }}" placeholder="Observación" required
+               {% if modo != "editar" %}readonly{% endif %}>
+
+        <label for="nivel">Nivel de satisfacción:</label>
+        <select name="nivel" required {% if modo != "editar" %}disabled{% endif %}>
+          <option value="">Seleccionar nivel</option>
+          <option value="1" {% if persona.nivel == 1 %}selected{% endif %}>😡 Malo</option>
+          <option value="2" {% if persona.nivel == 2 %}selected{% endif %}>😕 Regular</option>
+          <option value="3" {% if persona.nivel == 3 %}selected{% endif %}>😐 Neutro</option>
+          <option value="4" {% if persona.nivel == 4 %}selected{% endif %}>🙂 Bueno</option>
+          <option value="5" {% if persona.nivel == 5 %}selected{% endif %}>😄 Excelente</option>
+        </select>
+
+        <label for="fotos">📷 Adjuntar fotos:</label>
+        <input type="file" name="fotos" id="fotos" multiple accept="image/*">
+
+        <input type="hidden" name="latitud" id="latitud">
+        <input type="hidden" name="longitud" id="longitud">
+	{#
+        <a href="/historial/{{ persona.indice }}">
+          <button type="button" style="background-color:#34c759; color:white; font-weight:bold;">
+            📖 Ver historial
+          </button>
+        </a>
+	#}
+        <button type="submit">Guardar</button>
+        <a href="/registro_visita"><button type="button" class="cancelar">Cancelar</button></a>
+      {% else %}
+        <button type="submit" id="btnBuscar">Buscar</button>
+      {% endif %}
+    </form>
+  </div>
+
+  <script>
+    function adjuntarUbicacion(event) {
+      const latInput = document.getElementById('latitud');
+      const lonInput = document.getElementById('longitud');
+      if (!latInput || !lonInput) return;
+
+      event.preventDefault();
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        latInput.value = pos.coords.latitude;
+        lonInput.value = pos.coords.longitude;
+        event.target.submit();
+      }, function() {
+        event.target.submit();
+      });
+    }
+
+    {% if modo == "editar" %}
+    document.addEventListener("DOMContentLoaded", function() {
+      const btnBuscar = document.getElementById("btnBuscar");
+      const campoObs = document.getElementById("observacion");
+      if (btnBuscar) btnBuscar.disabled = true;
+      if (campoObs) campoObs.focus();
+    });
+    {% endif %}
+  </script>
+</body>
+</html>
